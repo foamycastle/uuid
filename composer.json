@@ -1,0 +1,22 @@
+{
+  "name": "foamycastle/uuid",
+  "description": "An RFC4122-compliant UUID Generator",
+  "minimum-stability": "stable",
+  "license": "proprietary",
+  "authors": [
+    {
+      "name": "Aaron Sollman",
+      "email": "unclepong@gmail.com"
+    }
+  ],
+  "require": {
+    "php": ">=8.1",
+    "ext-openssl": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "\\FoamyCastle\\UUID\\": "./",
+      "\\FoamyCastle\\UUID\\Exceptions\\": "./Exceptions/"
+    }
+  }
+}

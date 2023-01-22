@@ -1,0 +1,269 @@
+<?php
+
+namespace FoamyCastle\UUID;
+use FoamyCastle\UUID\UUIDVersion;
+use FoamyCastle\UUID\UUIDVariant;
+
+use FoamyCastle\UUID\Exceptions\InvalidNodeValueException;
+use FoamyCastle\UUID\Exceptions\InvalidNamespaceIDValueException;
+use FoamyCastle\UUID\Exceptions\TimestampRaceConditionException;
+
+class UUID {
+	private const GREGORIAN_PERIOD=122192928000000000;
+	private const UUID_FORMAT_VALID="/^([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})|([a-f0-9]{32})$/i";
+	private const NODE_FORMAT_VALID="/^[a-f0-9]{12}$/i";
+	private const UUID_FORMAT_OUTPUT="%s-%s-%s-%s%s-%s";
+	private const COUNTER_MAX=0x1FFF;
+	private array $components;
+	private int $timestamp;
+	private string $namespace;
+	private string $namespaceID;
+	private string $node;
+	private bool $nodeManualSet;
+	private array $hashAlgorithms=[
+		3=>'MD5',
+		5=>'sha1'
+	];
+	private string $hashAlgorithm;
+	private string $hash;
+	private int $counter;
+	private string $uuid;
+	private UUIDVersion $version;
+	private UUIDVariant $variant;
+	function __construct(UUIDVersion $version=UUIDVersion::VERSION_1,?string $node=null,?string $namespace=null,?string $namespaceID=null){
+
+		//set the RFC4122 version
+		$this->version=$version;
+
+		//currently, the only supported variant is the one outlined in RFC4122
+		$this->variant=UUIDVariant::VARIANT_RFC4122;
+
+		//version 1
+		if($this->isTimeBased()){
+			$this->setTimestamp();
+			$this->setNode($node);
+			$this->resetCounter();
+		}
+		//version 3 and 5
+		if($this->isNameBased()){
+			$this->setNamespace($namespace ?? $this->getNamespace());
+			$this->setNamespaceID($namespaceID ?? $this->getNamespaceID());
+			$this->hashAlgorithm=$this->hashAlgorithms[$this->version->value];
+		}
+	}
+	function __toString():string{
+		return $this->uuid ?? "";
+	}
+	public function setNamespaceID(string $value):UUID {
+		if($this->validateNamespaceID($value)){
+			$this->namespaceID=str_replace('-',"",$value);
+			return $this;
+		}
+		throw new InvalidNamespaceIDValueException();
+	}
+	public function setNamespace(string $value):UUID {
+		$this->namespace=$value;
+		return $this;
+	}
+	public function setNode(?string $value=null):UUID {
+		if(!$value) {
+			$this->node = $this->getARandomHexValue(12);
+			$this->nodeManualSet=false;
+			return $this;
+		}
+		if($this->validateNodeValue($value)) {
+			$this->node = $value;
+			$this->nodeManualSet=true;
+			return $this;
+		}
+		throw new InvalidNodeValueException();
+	}
+	private function setTimestamp():void{
+		$this->timestamp=$this->getTimestamp();
+	}
+	private function getCounter():int{
+		return $this->counter;
+	}
+	private function getTimestamp():int{
+		return (
+			self::GREGORIAN_PERIOD +
+			(int)floor(microtime(true)*10000000)
+		);
+	}
+	private function getARandomHexValue(int $nibblesLong, int $multiplex=0):string{
+		$minValue="1".str_pad("",$nibblesLong-1,"0");
+		$maxValue=str_pad("",$nibblesLong,"F");
+		return sprintf("%x",mt_rand(hexdec($minValue),hexdec($maxValue)) | $multiplex);
+	}
+	public function getVersion():int{
+		return $this->version->value;
+	}
+	public function getNamespaceID():string{
+		return $this->namespaceID ?? str_repeat($this->getARandomHexValue(8),4);
+	}
+	public function getNamespace():string{
+		return $this->namespace ?? base64_encode(random_bytes(8));
+	}
+	private function getTimeLow():void{
+		if ($this->isTimeBased()) {
+			$this->components['timeLow'] = sprintf("%'.08x", $this->timestamp & 0xffffffff);
+			return;
+		}
+		if ($this->isNameBased()) {
+			$this->components['timeLow'] = substr($this->hash, 0, 8);
+			return;
+		}
+		$this->components['timeLow'] = $this->getARandomHexValue(8);
+	}
+	private function getTimeMid():void{
+		if ($this->isTimeBased()) {
+			$this->components['timeMid'] = sprintf("%'.04x", ($this->timestamp >> 32) & 0xffff);
+			return;
+		}
+		if ($this->isNameBased()) {
+			$this->components['timeMid'] = substr($this->hash, 8, 4);
+			return;
+		}
+		$this->components['timeMid']= $this->getARandomHexValue(4);
+	}
+	private function getTimeHighAndVersion():void{
+		if ($this->isTimeBased()) {
+			$this->components['timeHigh'] = sprintf(
+				"%'.04x",
+				(($this->timestamp >> 48) & 0x0fff) | (($this->getVersion() << 12) & 0xf000)
+			);
+			return;
+		}
+		if ($this->isNameBased()) {
+			$this->components['timeHigh'] = sprintf(
+				"%x%s",
+				$this->getVersion(),
+				substr($this->hash, 13, 3)
+			);
+			return;
+		}
+		$this->components['timeHigh']= $this->getVersion().$this->getARandomHexValue(3);
+	}
+	private function getClockLow():void{
+		if ($this->isTimeBased()) {
+			$this->components['ClockLow'] = sprintf("%'.02x", ($this->getCounter() & 0xff));
+			return;
+		}
+		if ($this->isNameBased()) {
+			$this->components['ClockLow'] = substr($this->hash, 18, 2);
+			return;
+		}
+		$this->components['ClockLow']= $this->getARandomHexValue(2);
+	}
+	private function getClockHighAndReserved():void{
+		if ($this->isTimeBased()) {
+			$this->components['clockHigh'] = sprintf(
+				"%'.01x",
+				(($this->getCounter() >> 8) & 0x1F) | (($this->variant->value << 5) & 0xe0)
+			);
+			return;
+		}
+		if ($this->isNameBased()) {
+			$this->components['clockHigh'] = sprintf(
+				"%x%s",
+				(($this->variant->value << 1) & 0xe) | (hexdec(substr($this->hash, 16, 1)) & 0x1),
+				substr($this->hash, 17, 1)
+			);
+			return;
+		}
+		$this->components['clockHigh'] = $this->getARandomHexValue(2);
+	}
+	private function getNode():void {
+		if($this->isTimeBased()) {
+			$this->components['nodeValue'] = $this->node;
+			return;
+		}
+		if($this->isNameBased()) {
+			$this->components['nodeValue'] = substr($this->hash, 20,12);
+			return;
+		}
+		$this->components['nodeValue']=$this->getARandomHexValue(12);
+	}
+	private function isTimeBased():bool{
+		return $this->version==UUIDVersion::VERSION_1;
+	}
+	private function isNameBased():bool{
+		return $this->version==UUIDVersion::VERSION_3 || $this->version==UUIDVersion::VERSION_5;
+	}
+	private function isRandomBased():bool{
+		return $this->version==UUIDVersion::VERSION_4;
+	}
+	private function isTimestampTheSame():bool{
+		return $this->timestamp==$this->getTimestamp();
+	}
+	private function resetCounter():void{
+		$this->counter=0;
+	}
+	private function resetComponents():void{
+		$this->components=[];
+	}
+	private function validateNamespaceID(string $value):bool{
+		return preg_match(self::UUID_FORMAT_VALID,$value)==1;
+	}
+	private function validateNodeValue(string $value):bool{
+		return preg_match(self::NODE_FORMAT_VALID,$value)==1;
+	}
+	private function performHash():void {
+		$this->hash=openssl_digest(
+			$this->getNamespaceID().$this->getNamespace(),
+			$this->hashAlgorithm
+		);
+	}
+	private function compile():void{
+		if($this->isNameBased()){
+			$this->performHash();
+		}
+		if($this->isTimeBased()){
+			if ($this->counter>self::COUNTER_MAX&&$this->nodeManualSet&&$this->isTimestampTheSame()){
+				throw new TimestampRaceConditionException($this->node);
+			}
+			if ($this->counter>self::COUNTER_MAX&&!$this->nodeManualSet){
+				$this->setNode();
+			}
+			$this->setTimestamp();
+		}
+		$this->getTimeLow();
+		$this->getTimeMid();
+		$this->getTimeHighAndVersion();
+		$this->getClockHighAndReserved();
+		$this->getClockLow();
+		$this->getNode();
+		$this->uuid=sprintf(self::UUID_FORMAT_OUTPUT,...array_values($this->components));
+		$this->resetComponents();
+		if($this->isTimeBased()) $this->counter++;
+	}
+	public static function generate(UUID $instance):string{
+		$instance->compile();
+		return $instance->uuid;
+	}
+	public static function TimeBased(?string $node=null):UUID{
+		return new self(
+			UUIDVersion::VERSION_1,
+			$node
+		);
+	}
+	public static function NameBased_MD5(string $namespace,?string $namespaceID=null):UUID{
+		return new self(
+			UUIDVersion::VERSION_3,
+			null,
+			$namespace,
+			$namespaceID
+		);
+	}
+	public static function NameBased_SHA1(string $namespace,?string $namespaceID=null):UUID{
+		return new self(
+			UUIDVersion::VERSION_5,
+			null,
+			$namespace,
+			$namespaceID
+		);
+	}
+	public static function RandomBased():UUID{
+		return new self(UUIDVersion::VERSION_4);
+	}
+}
