@@ -9,26 +9,81 @@ use FoamyCastle\UUID\Exceptions\InvalidNamespaceIDValueException;
 use FoamyCastle\UUID\Exceptions\TimestampRaceConditionException;
 
 class UUID {
-	private const GREGORIAN_PERIOD=122192928000000000;
+	/**
+	 * The number of 100ns periods between 15-Oct-1582 and 1-Jan-1970
+	 */
+	private const GREGORIAN_TO_UNIX=122192928000000000;
+	/**
+	 * Regex expression that validates UUID strings
+	 */
 	private const UUID_FORMAT_VALID="/^([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})|([a-f0-9]{32})$/i";
+	/**
+	 * Regex expression that validates a user-supplied node ID
+	 */
 	private const NODE_FORMAT_VALID="/^[a-f0-9]{12}$/i";
+	/**
+	 * The format string used by sprintf() for UUID output
+	 */
 	private const UUID_FORMAT_OUTPUT="%s-%s-%s-%s%s-%s";
+	/**
+	 * The maximum number of UUID string that can be generated in a given timestamp window
+	 */
 	private const COUNTER_MAX=0x1FFF;
+	/**
+	 * @var array contains the constituent elements of a UUID string after compilation
+	 */
 	private array $components;
+	/**
+	 * @var int The current timestamp measured in 1µs periods
+	 */
 	private int $timestamp;
+	/**
+	 * @var string namespace for version 3 and version 5 UUID strings
+	 */
 	private string $namespace;
+	/**
+	 * @var string the UUID string that is used for version 3 and version 5 generation
+	 */
 	private string $namespaceID;
+	/**
+	 * @var string a 48-bit value used as an identifier in version 1 strings
+	 */
 	private string $node;
-	private bool $nodeManualSet;
+	/**
+	 * @var array|string[] hash algorithms used in version 3 and version 5
+	 */
 	private array $hashAlgorithms=[
 		3=>'MD5',
 		5=>'sha1'
 	];
+	/**
+	 * @var string|mixed the chosen hash algorithm for the generator
+	 */
 	private string $hashAlgorithm;
+	/**
+	 * @var string a hash string generated for version 3 and version 5
+	 */
 	private string $hash;
+	/**
+	 * @var int counter used in the version 1 strings
+	 */
 	private int $counter;
+	/**
+	 * @var string the most recently generated UUID
+	 */
 	private string $uuid;
+	/**
+	 * @var bool flag used to prevent some methods from being used without
+	 *           using the static constructors
+	 */
+	private bool $isInit=false;
+	/**
+	 * @var \FoamyCastle\UUID\UUIDVersion the version of the UUID string
+	 */
 	private UUIDVersion $version;
+	/**
+	 * @var \FoamyCastle\UUID\UUIDVariant the reserved bits indicating a schema variant
+	 */
 	private UUIDVariant $variant;
 	function __construct(UUIDVersion $version=UUIDVersion::VERSION_1,?string $node=null,?string $namespace=null,?string $namespaceID=null){
 
@@ -38,45 +93,48 @@ class UUID {
 		//currently, the only supported variant is the one outlined in RFC4122
 		$this->variant=UUIDVariant::VARIANT_RFC4122;
 
-		//version 1
-		if($this->isTimeBased()){
-			$this->setTimestamp();
-			$this->setNode($node);
-			$this->resetCounter();
-		}
 		//version 3 and 5
 		if($this->isNameBased()){
 			$this->setNamespace($namespace ?? $this->getNamespace());
 			$this->setNamespaceID($namespaceID ?? $this->getNamespaceID());
 			$this->hashAlgorithm=$this->hashAlgorithms[$this->version->value];
+			return;
 		}
+		//version 1
+		if($this->isTimeBased()){
+			$this->setTimestamp();
+			$this->resetCounter();
+		}
+		//Set the node value to either the supplied value or a random one
+		$this->setNode($node);
 	}
 	function __toString():string{
 		return $this->uuid ?? "";
 	}
 	public function setNamespaceID(string $value):UUID {
-		if($this->validateNamespaceID($value)){
-			$this->namespaceID=str_replace('-',"",$value);
-			return $this;
+		if($this->isNameBased()){
+			if(!$this->validateNamespaceID($value)){
+				throw new InvalidNamespaceIDValueException();
+			}
+			$this->namespaceID = str_replace('-', "", $value);
 		}
-		throw new InvalidNamespaceIDValueException();
+		return $this;
 	}
 	public function setNamespace(string $value):UUID {
-		$this->namespace=$value;
+		if($this->isNameBased()){
+			$this->namespace=$value;
+		}
 		return $this;
 	}
 	public function setNode(?string $value=null):UUID {
 		if(!$value) {
 			$this->node = $this->getARandomHexValue(12);
-			$this->nodeManualSet=false;
-			return $this;
-		}
-		if($this->validateNodeValue($value)) {
+		}elseif($value&&$this->validateNodeValue($value)) {
 			$this->node = $value;
-			$this->nodeManualSet=true;
-			return $this;
+		}else{
+			throw new InvalidNodeValueException();
 		}
-		throw new InvalidNodeValueException();
+		return $this;
 	}
 	private function setTimestamp():void{
 		$this->timestamp=$this->getTimestamp();
@@ -86,7 +144,7 @@ class UUID {
 	}
 	private function getTimestamp():int{
 		return (
-			self::GREGORIAN_PERIOD +
+			self::GREGORIAN_TO_UNIX +
 			(int)floor(microtime(true)*10000000)
 		);
 	}
@@ -99,10 +157,10 @@ class UUID {
 		return $this->version->value;
 	}
 	public function getNamespaceID():string{
-		return $this->namespaceID ?? str_repeat($this->getARandomHexValue(8),4);
+		return $this->namespaceID ?? $this->namespaceID=str_repeat($this->getARandomHexValue(8),4);
 	}
 	public function getNamespace():string{
-		return $this->namespace ?? base64_encode(random_bytes(8));
+		return $this->namespace ?? $this->namespace=base64_encode(random_bytes(6));
 	}
 	private function getTimeLow():void{
 		if ($this->isTimeBased()) {
@@ -173,16 +231,9 @@ class UUID {
 		}
 		$this->components['clockHigh'] = $this->getARandomHexValue(2);
 	}
-	private function getNode():void {
-		if($this->isTimeBased()) {
-			$this->components['nodeValue'] = $this->node;
-			return;
-		}
-		if($this->isNameBased()) {
-			$this->components['nodeValue'] = substr($this->hash, 20,12);
-			return;
-		}
-		$this->components['nodeValue']=$this->getARandomHexValue(12);
+	public function getNode():string {
+		$this->components['nodeValue'] = $this->node;
+		return $this->node ?? "";
 	}
 	private function isTimeBased():bool{
 		return $this->version==UUIDVersion::VERSION_1;
@@ -217,13 +268,16 @@ class UUID {
 	private function compile():void{
 		if($this->isNameBased()){
 			$this->performHash();
+			$this->setNode(substr($this->hash,20,12));
 		}
 		if($this->isTimeBased()){
-			if ($this->counter>self::COUNTER_MAX&&$this->nodeManualSet&&$this->isTimestampTheSame()){
+			if ($this->counter>self::COUNTER_MAX&&$this->isTimestampTheSame()){
+				/*unlikely that this would ever happen. to many numbers have been
+				  generated within the timestamp window */
 				throw new TimestampRaceConditionException($this->node);
 			}
-			if ($this->counter>self::COUNTER_MAX&&!$this->nodeManualSet){
-				$this->setNode();
+			if ($this->counter>self::COUNTER_MAX){
+				$this->resetCounter();
 			}
 			$this->setTimestamp();
 		}
@@ -237,15 +291,19 @@ class UUID {
 		$this->resetComponents();
 		if($this->isTimeBased()) $this->counter++;
 	}
-	public static function generate(UUID $instance):string{
-		$instance->compile();
-		return $instance->uuid;
+	public function generate():void{
+		if(!$this->isInit){
+			return;
+		}
+		$this->compile();
 	}
 	public static function TimeBased(?string $node=null):UUID{
-		return new self(
+		$newObj=new self(
 			UUIDVersion::VERSION_1,
 			$node
 		);
+		$newObj->isInit=true;
+		return $newObj;
 	}
 	public static function NameBased_MD5(string $namespace,?string $namespaceID=null):UUID{
 		return new self(
