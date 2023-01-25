@@ -1,8 +1,6 @@
 <?php
 
 namespace FoamyCastle\UUID;
-use FoamyCastle\UUID\UUIDVersion;
-use FoamyCastle\UUID\UUIDVariant;
 
 use FoamyCastle\UUID\Exceptions\InvalidNodeValueException;
 use FoamyCastle\UUID\Exceptions\InvalidNamespaceIDValueException;
