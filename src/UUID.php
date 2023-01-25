@@ -200,7 +200,7 @@ class UUID {
 			);
 			return;
 		}
-		$this->components['timeHigh']= $this->getVersion().$this->getARandomHexValue(3);
+		$this->components['timeHigh']= $this->getVersion() . $this->getARandomHexValue(3);
 	}
 	private function getClockLow():void{
 		if ($this->isTimeBased()) {
@@ -261,7 +261,7 @@ class UUID {
 	}
 	private function performHash():void {
 		$this->hash=openssl_digest(
-			$this->getNamespaceID().$this->getNamespace(),
+			$this->getNamespaceID() . $this->getNamespace(),
 			$this->hashAlgorithm
 		);
 	}
