@@ -15,6 +15,7 @@
   },
   "autoload": {
     "psr-4": {
+      "\\FoamyCastle\\": "src/",
       "\\FoamyCastle\\UUID\\": "src/UUID",
       "\\FoamyCastle\\UUID\\Exceptions\\": "src/UUID/Exceptions/"
     }
