@@ -2,7 +2,7 @@
   "name": "foamycastle/uuid",
   "description": "An RFC4122-compliant UUID Generator",
   "minimum-stability": "stable",
-  "license": "mit",
+  "license": "GPL-2.0-only",
   "authors": [
     {
       "name": "Aaron Sollman",
