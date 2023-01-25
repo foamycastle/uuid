@@ -289,12 +289,11 @@ class UUID {
 		$this->resetComponents();
 		if($this->isTimeBased()) $this->counter++;
 	}
-	public function generate():UUID{
+	public function generate():void{
 		if(!$this->isInit){
-			return $this;
+			return;
 		}
 		$this->compile();
-		return $this;
 	}
 	public static function TimeBased(?string $node=null):UUID{
 		$newObj=new self(
