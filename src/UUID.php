@@ -83,7 +83,7 @@ class UUID {
 	 * @var \FoamyCastle\UUID\UUIDVariant the reserved bits indicating a schema variant
 	 */
 	private UUIDVariant $variant;
-	private function __construct(UUIDVersion $version=UUIDVersion::VERSION_1,?string $node=null,?string $namespace=null,?string $namespaceID=null){
+	public function __construct(UUIDVersion $version=UUIDVersion::VERSION_1,?string $node=null,?string $namespace=null,?string $namespaceID=null){
 
 		//set the RFC4122 version
 		$this->version=$version;
