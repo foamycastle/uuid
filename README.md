@@ -1,6 +1,6 @@
 # uuid
  Oh fantastic! Yet another class to generate uuids that are fully compliant with RFC4122.
- We need another one of these php libraries like we need a hangnail. But here's my roll.
+ We need another one of these php libraries like we need a hangnail but here's my roll.
  It's pretty basic because I'm a relatively new developer so this library is probably riddled
  with errors and farts. 
 
@@ -37,21 +37,21 @@ $uuid->generate();
  ### Setting the Node ID 
 *(only available with version 1)*<br><br>
 An optional 48-bit identifier may be supplied, either at the time of object instantiation
-or later if or when the need to do so arises. If a node ID isn't supplied, one is randomly generated.  The node ID must be a 12-character hex string. If anything else is supplied, an exception is thrown. Any node ID, whether generated or otherwise is always available via the `getNode()` method.  The `generate()` method is not a necessary call, but it is an option as this method is fluent.
+or later if or when the need to do so arises. If a node ID isn't supplied, one is randomly generated.  The node ID must be a 12-character hex string. If anything else is supplied, an exception is thrown. Any node ID, whether generated or otherwise is always available via the `getNode()` method. This method is fluent.
 ```php
-$uuid->setNode('abacabfacade')->generate();
+$uuid->setNode('abacabfacade');
 ```
  ### Setting the Namespace
 *(only available with versions 3 and 5)*<br><br>
-The version 3 and version 5 specifications allow for UUIDs to be generated from hashed namespaces. Namespaces can be provided and the point of instantiation *(see above)* or afterwards. The namespace and can be any string value. If a namespace value is not provided, one is generated and is available via the `getNamespace()` method.  The `generate()` method is not a necessary call, but it is an option as this method is fluent.
+The version 3 and version 5 specifications allow for UUIDs to be generated from hashed namespaces. Namespaces can be provided and the point of instantiation *(see above)* or afterwards. The namespace and can be any string value. If a namespace value is not provided, one is generated and is available via the `getNamespace()` method. This method is fluent.
 ```php
-$uuid->setNamespace("BIG ZADDY")->generate();
+$uuid->setNamespace("BIG ZADDY");
 ```
 ### Setting the Namespace ID
 *(only available with versions 3 and 5)*<br><br>
-Namespace IDs are UUID strings that are provided to the `UUID` object by the user at instantiation, set by the user after instantiation, or generated automatically. The namespace ID _MUST_ a valid 32-character hex string (hyphens are ok; they're filtered out). The `generate()` method is not a necessary call, but it is an option as this method is fluent.
+Namespace IDs are UUID strings that are provided to the `UUID` object by the user at instantiation, set by the user after instantiation, or generated automatically. The namespace ID _MUST_ a valid 32-character hex string (hyphens are ok; they're filtered out). This method is fluent.
 ```php
-$uuid->setNamespaceID("73ed81aa-b18c-9acc-8acd-418be9da330e")->generate();
+$uuid->setNamespaceID("73ed81aa-b18c-9acc-8acd-418be9da330e");
 ```
 ## Method reference
 | Method                          | Return Type | Parameters    | Description                                                                                                                   |
