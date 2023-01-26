@@ -71,11 +71,6 @@ class UUID {
 	 */
 	private string $uuid;
 	/**
-	 * @var bool flag used to prevent some methods from being used without
-	 *           using the static constructors
-	 */
-	private bool $isInit=false;
-	/**
 	 * @var \FoamyCastle\UUID\UUIDVersion the version of the UUID string
 	 */
 	private UUIDVersion $version;
@@ -292,9 +287,6 @@ class UUID {
 		$this->resetComponents();
 	}
 	public function generate():string{
-		if(!$this->isInit){
-			return "";
-		}
 		$this->compile();
 		return $this->uuid;
 	}
