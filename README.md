@@ -6,31 +6,31 @@
 
 ## Usage
 
-### Version 1 *(Time-based)*
+### Version 1 Factory *(Time-based)*
 ```php
 //Instantiator supplied with [optional] node value string
 //NOTE: node value string must be a 12-character hex string
 
 $uuid = UUID::Timebased('0123456789ab');
 ```
-### Version 3 *(Name-based)*
+### Version 3 Factory *(Name-based)*
 ```php
 //Instantiator supplied with [optional] namespace string and namespace ID.
 //NOTE: namespace ID MUST be a valid UUID string
 
 $uuid = UUID::NameBased_MD5('namespace string','01234567-89ab-cdef-0123-456789abcdef');
 ```
-### Version 5 *(Name-based)*
+### Version 5 Factory *(Name-based)*
 ```php
 $uuid = UUID::NameBased_SHA1('namespace string','01234567-89ab-cdef-0123-4567890abcdef');
 ```
-### Version 4 *(Completely Random)*
+### Version 4 Factory *(Completely Random)*
 ```php
 //All bits except for version and variant bits are random
 $uuid = UUID::RandomBased();
 ```
  ### Generation
-Once the `generate()` method has been called, the `$uuid` object may be used as a string. This method stores the generated value internally, as well as returns the value. The generated string will persist until the `generate()` method is called again.
+The `generate()` compiles all the elements of the UUID and returns the UUID string. At this point, the `$uuid` object may also be used as a string. The generated string will persist until the `generate()` method is called again.
 ```php
 $uuid->generate();
 ```
@@ -56,11 +56,12 @@ $uuid->setNamespaceID("73ed81aa-b18c-9acc-8acd-418be9da330e")->generate();
 ## Method reference
 | Method                          | Return Type | Parameters    | Description                                                                                                                   |
 |---------------------------------|-------------|---------------|-------------------------------------------------------------------------------------------------------------------------------|
-| `getNamespace()`                | `string`    | (none)        | Returns the current namespace string. If a namespace has been supplied by the user, one is automatically generated.           | 
-| `getNamespaceID()`              | `string`    | (none)        | Returns the current namespace ID string. If a namespace Id has not been supplied by the user, one is automatically generated. |
+| `generate()`                    | `string`    | (none)        | Generates and returns a new UUID string.                                                                                      | 
+| `getNamespace()`                | `string`    | (none)        | Returns the current namespace string. If a namespace has not been supplied by the user, one is automatically generated.       | 
+| `getNamespaceID()`              | `string`    | (none)        | Returns the current namespace ID string. If a namespace ID has not been supplied by the user, one is automatically generated. |
 | `getNode()`                     | `string`    | (none)        | Returns the current node ID string.                                                                                           |
 | `getVersion()`                  | `int`       | (none)        | Returns the UUID version used to generate strings.                                                                            |
 | `setNamespace(string $value)`   | `UUID`      | `namespace`   | Set the namespace string that will be used to hash version 3 and version 5 strings.                                           |
 | `setNamespaceID(string $value)` | `UUID`      | `namespaceID` | Set the namespace ID string that will be used to hash version 3 and version 5 strings.                                        |
-| `setNode(string $value)`         | `UUID`       | `nodeID`       | Set the node ID that will be used as an identifier in version 1 strings.                                                      |
+| `setNode(string $value)`        | `UUID`       | `nodeID`       | Set the node ID that will be used as an identifier in version 1 strings.                                                      |
 
