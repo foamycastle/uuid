@@ -269,8 +269,11 @@ class UUID {
 			$this->setNode(substr($this->hash,20,12));
 		}
 		if($this->isTimeBased()){
+			if ($this->isTimestampTheSame()){
+				$this->counter++;
+			}
 			if ($this->counter>self::COUNTER_MAX&&$this->isTimestampTheSame()){
-				/*unlikely that this would ever happen. to many numbers have been
+				/*unlikely that this would ever happen. too many numbers have been
 				  generated within the timestamp window */
 				throw new TimestampRaceConditionException($this->node);
 			}
@@ -287,7 +290,6 @@ class UUID {
 		$this->getNode();
 		$this->uuid=sprintf(self::UUID_FORMAT_OUTPUT,...array_values($this->components));
 		$this->resetComponents();
-		if($this->isTimeBased()) $this->counter++;
 	}
 	public function generate():string{
 		if(!$this->isInit){
