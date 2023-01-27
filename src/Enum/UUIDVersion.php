@@ -1,6 +1,6 @@
 <?php
 
-namespace FoamyCastle\UUID;
+namespace FoamyCastle\UUID\Enum;
 
 enum UUIDVersion:int {
     case VERSION_1=1; //time-based, clock sequence, node ID (random or set)
