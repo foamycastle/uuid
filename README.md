@@ -1,5 +1,5 @@
 # uuid
- Oh fantastic! Yet another class to generate uuids that are fully compliant with RFC4122.
+ Oh, fantastic! Yet another class to generate uuids that are fully compliant with RFC4122.
  We need another one of these php libraries like we need a hangnail but here's my roll.
  It's pretty basic because I'm a relatively new developer so this library is probably riddled
  with errors and farts. 
@@ -8,26 +8,26 @@
 
 ### Version 1 Factory *(Time-based)*
 ```php
-//Instantiator supplied with [optional] node value string
-//NOTE: node value string must be a 12-character hex string
-
-$uuid = UUID::Timebased('0123456789ab');
+//NOTE: optional node value string must be a 12-character hex string
+$uuid = new TimeBasedUUID();
+$uuid = new TimeBasedUUID('0123456789ab');
 ```
 ### Version 3 Factory *(Name-based)*
 ```php
-//Instantiator supplied with [optional] namespace string and namespace ID.
 //NOTE: namespace ID MUST be a valid UUID string
-
-$uuid = UUID::NameBased_MD5('namespace string','01234567-89ab-cdef-0123-456789abcdef');
+//Arguments are required
+$uuid = new MD5BasedUUID('namespace','01234567-89ab-cdef-0123-456789abcdef');
 ```
 ### Version 5 Factory *(Name-based)*
 ```php
-$uuid = UUID::NameBased_SHA1('namespace string','01234567-89ab-cdef-0123-4567890abcdef');
+//NOTE: namespace ID MUST be a valid UUID string
+//Arguments are required
+$uuid = new SHA1BasedUUID('namespace','01234567-89ab-cdef-0123-4567890abcdef');
 ```
 ### Version 4 Factory *(Completely Random)*
 ```php
 //All bits except for version and variant bits are random
-$uuid = UUID::RandomBased();
+$uuid = new RandomBasedUUID();
 ```
  ### Generation
 The `generate()` compiles all the elements of the UUID and returns the UUID string. At this point, the `$uuid` object may also be used as a string. The generated string will persist until the `generate()` method is called again.
