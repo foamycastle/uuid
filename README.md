@@ -6,25 +6,25 @@
 
 ## Usage
 
-### Version 1 Factory *(Time-based)*
+### Version 1 *(Time-based)*
 ```php
 //NOTE: optional node value string must be a 12-character hex string
 $uuid = new TimeBasedUUID();
 $uuid = new TimeBasedUUID('0123456789ab');
 ```
-### Version 3 Factory *(Name-based)*
+### Version 3 *(Name-based)*
 ```php
 //NOTE: namespace ID MUST be a valid UUID string
 //Arguments are required
 $uuid = new MD5BasedUUID('namespace','01234567-89ab-cdef-0123-456789abcdef');
 ```
-### Version 5 Factory *(Name-based)*
+### Version 5 *(Name-based)*
 ```php
 //NOTE: namespace ID MUST be a valid UUID string
 //Arguments are required
 $uuid = new SHA1BasedUUID('namespace','01234567-89ab-cdef-0123-4567890abcdef');
 ```
-### Version 4 Factory *(Completely Random)*
+### Version 4 *(Completely Random)*
 ```php
 //All bits except for version and variant bits are random
 $uuid = new RandomBasedUUID();
