@@ -30,9 +30,15 @@ $uuid = new SHA1BasedUUID('namespace','01234567-89ab-cdef-0123-4567890abcdef');
 $uuid = new RandomBasedUUID();
 ```
  ### Generation
-The `generate()` compiles all the elements of the UUID and returns the UUID string. At this point, the `$uuid` object may also be used as a string. The generated string will persist until the `generate()` method is called again.
+The `generate()` compiles all the elements of the UUID and returns the UUID string. 
 ```php
 $uuid->generate();
+```
+### Reuse (value persistence)
+Once generated the UUID value will persist in the object until the `generate()` method is called again. The object can be used as a string.
+```php
+echo $uuid;
+//output 7381adef-23ff-4321-abcd-839201657483
 ```
  ### Setting the Node ID 
 *(only available with version 1)*<br><br>
