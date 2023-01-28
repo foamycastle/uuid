@@ -8,34 +8,43 @@
 
 ### Version 1 *(Time-based)*
 ```php
-//NOTE: optional node value string must be a 12-character hex string
-$uuid = new TimeBasedUUID();
-$uuid = new TimeBasedUUID('0123456789ab');
+//NOTE: optional node value string MUST be a 12-character hex string
+$uuid_timebased = new TimeBasedUUID();
+$uuid_timebased = new TimeBasedUUID('0123456789ab');
+echo $uuid_timebased;
+//output f3b64e06-9f09-11ed-8000-0123456789ab
 ```
 ### Version 3 *(Name-based)*
 ```php
 //NOTE: namespace ID MUST be a valid UUID string
 //Arguments are required
-$uuid = new MD5BasedUUID('namespace','01234567-89ab-cdef-0123-456789abcdef');
+$uuid_md5based = new MD5BasedUUID('namespace','01234567-89ab-cdef-0123-456789abcdef');
+echo $uuid_md5based;
+//output efeca3ca-05ff-3d3e-91c4-ce451deb58fc
 ```
 ### Version 5 *(Name-based)*
 ```php
 //NOTE: namespace ID MUST be a valid UUID string
 //Arguments are required
-$uuid = new SHA1BasedUUID('namespace','01234567-89ab-cdef-0123-4567890abcdef');
+$uuid_sha1based = new SHA1BasedUUID('namespace','01234567-89ab-cdef-0123-456789abcdef');
+echo $uuid_sha1based;
+//output 171cac9a-9c41-58fe-8642-c4ca1df98e89
 ```
 ### Version 4 *(Completely Random)*
 ```php
 //All bits except for version and variant bits are random
-$uuid = new RandomBasedUUID();
+$uuid_randombased=new RandomBasedUUID();
+echo $uuid_randombased;
+//output d8c9c30a-da4e-41aa-79b3-b232208b7e76
 ```
  ### Generation
-The `generate()` compiles all the elements of the UUID and returns the UUID string. 
+The `generate()` compiles all the elements of the UUID and returns the UUID string. It is important to note that this method is called upon instantiation.
 ```php
 $uuid->generate();
+//output 7381adef-23ff-4321-abcd-839201657483
 ```
 ### Reuse (value persistence)
-Once generated the UUID value will persist in the object until the `generate()` method is called again. The object can be used as a string.
+Once generated, the UUID value will persist in the object until the `generate()` method is called again. The object can be used as a string.
 ```php
 echo $uuid;
 //output 7381adef-23ff-4321-abcd-839201657483
