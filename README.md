@@ -1,8 +1,8 @@
 # uuid
  Oh, fantastic! Yet another class to generate uuids that are fully compliant with RFC4122.
  We need another one of these php libraries like we need a hangnail but here's my roll.
- It's pretty basic because I'm a relatively new developer so this library is probably riddled
- with errors and farts. 
+ It's pretty basic because I'm a relatively new developer so this library is probably ~~riddled
+ with errors and farts~~ a totally solid library. 
 
 ## Usage
 
