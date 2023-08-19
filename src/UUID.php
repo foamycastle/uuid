@@ -86,4 +86,9 @@ abstract class UUID {
 		$this->getNode();
 		return sprintf(self::UUID_FORMAT_OUTPUT,...array_values($this->components));
 	}
+
+    public static function validate(string $uuid):bool
+    {
+        return preg_match('/(?i)^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/',$uuid)==1;
+    }
 }
