@@ -1,6 +1,6 @@
 <?php
 
-namespace FoamyCastle\UUID\Prototype;
+namespace FoamyCastle\UUID;
 
 use FoamyCastle\UUID\Enum\UUIDVersion;
 use FoamyCastle\UUID\Exceptions\UnVersionedException;

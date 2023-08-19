@@ -2,7 +2,6 @@
 
 namespace FoamyCastle\UUID;
 
-use FoamyCastle\UUID\Prototype\UUID;
 use FoamyCastle\UUID\Enum\UUIDVersion;
 
 class TimeBasedUUID extends UUID {
@@ -15,7 +14,7 @@ class TimeBasedUUID extends UUID {
 	 */
 	private const COUNTER_MAX=0x1FFF;
 	/**
-	 * @var int The current timestamp measured in 1µs periods
+	 * @var int The current timestamp measured in 1ï¿½s periods
 	 */
 	private int $timestamp;
 	/**
@@ -30,7 +29,7 @@ class TimeBasedUUID extends UUID {
 	}
 	function generate(): string {
 		if($this->isTimestampTheSame()){
-			//unlikely, but if php is quick enough to be able to generate 2 IDs in the same 1µs period,
+			//unlikely, but if php is quick enough to be able to generate 2 IDs in the same 1ï¿½s period,
 			//collisions are prevented by incrementing the counter.
 			$this->counter++;
 		}else{

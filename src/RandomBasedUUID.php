@@ -3,7 +3,6 @@
 namespace FoamyCastle\UUID;
 
 use FoamyCastle\UUID\Enum\UUIDVersion;
-use FoamyCastle\UUID\Prototype\UUID;
 
 class RandomBasedUUID extends UUID {
 	public function __construct() {
