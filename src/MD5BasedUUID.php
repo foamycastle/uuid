@@ -3,7 +3,6 @@
 namespace FoamyCastle\UUID;
 
 use FoamyCastle\UUID\Enum\UUIDVersion;
-use FoamyCastle\UUID\Prototype\NameBasedUUID;
 
 class MD5BasedUUID extends NameBasedUUID {
 	function __construct(string $namespace, string $namespaceID) {

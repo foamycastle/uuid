@@ -1,9 +1,9 @@
 <?php
 
-namespace FoamyCastle\UUID\Prototype;
+namespace FoamyCastle\UUID;
 
-use FoamyCastle\UUID\Exceptions\UnVersionedException;
 use FoamyCastle\UUID\Exceptions\InvalidNamespaceIDValueException;
+use FoamyCastle\UUID\Exceptions\UnVersionedException;
 
 class NameBasedUUID extends UUID {
 	/**
