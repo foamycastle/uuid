@@ -3,7 +3,9 @@
 namespace FoamyCastle\UUID;
 
 use FoamyCastle\UUID\Enum\UUIDVersion;
+use FoamyCastle\UUID\Exceptions\UnVersionedException;
 use FoamyCastle\UUID\Exceptions\InvalidNodeValueException;
+use FoamyCastle\UUID\Exceptions\InvalidNamespaceIDValueException;
 
 abstract class UUID {
 
