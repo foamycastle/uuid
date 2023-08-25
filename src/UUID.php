@@ -4,6 +4,7 @@ namespace FoamyCastle\UUID;
 
 abstract class UUID
 {
+    public const VALIDATE='/(?i)[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/';
     protected const GREGOR=12219292800000000;
     protected int $timestamp;
     protected int $timeLow;
@@ -130,5 +131,10 @@ abstract class UUID
     public static function Random():Random
     {
         return new Random();
+    }
+
+    public static function validate(string $uuid):bool
+    {
+        return preg_match(self::VALIDATE,$uuid)==1;
     }
 }
