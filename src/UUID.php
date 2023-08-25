@@ -2,93 +2,133 @@
 
 namespace FoamyCastle\UUID;
 
-use FoamyCastle\UUID\Enum\UUIDVersion;
-use FoamyCastle\UUID\Exceptions\UnVersionedException;
-use FoamyCastle\UUID\Exceptions\InvalidNodeValueException;
-use FoamyCastle\UUID\Exceptions\InvalidNamespaceIDValueException;
+abstract class UUID
+{
+    protected const GREGOR=12219292800000000;
+    protected int $timestamp;
+    protected int $timeLow;
+    protected int $timeMid;
+    protected int $timeHigh;
+    protected int $version;
+    protected int $reserved;
+    protected int $clocksequence;
+    protected int $node;
+    public string $previous;
 
-abstract class UUID {
-
-	/**
-	 * Regex expression that validates UUID strings
-	 */
-	protected const UUID_FORMAT_VALID="/^([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})|([a-f0-9]{32})$/i";
-	/**
-	 * The format string used by sprintf() for UUID output
-	 */
-	private const NODE_FORMAT_VALID="/^[a-f0-9]{12}$/i";
-	/**
-	 * @var array contains the constituent elements of a UUID string after compilation
-	 */
-	protected const UUID_FORMAT_OUTPUT="%s-%s-%s-%s%s-%s";
-	/**
-	 * Regex expression that validates a user-supplied node ID
-	 */
-	protected array $components;
-	/**
-	 * @var string a 48-bit value used as an identifier in version 1 strings
-	 */
-	protected string $node;
-
-	protected int $variant=4;
-	/**
-	 * @var \FoamyCastle\UUID\Enum\UUIDVersion the version of the UUID string
-	 */
-	protected UUIDVersion $version;
-	/**
-	 * @var string the most recently generated UUID
-	 */
-	protected string $uuid;
-	abstract protected function getTimeLow():void;
-	abstract protected function getTimeMid():void;
-	abstract protected function getTimeHighAndVersion():void;
-	abstract protected function getClockLow():void;
-	abstract protected function getClockHighAndReserved():void;
-	abstract function generate():string;
-	function __toString():string{
-		return $this->uuid ?? "";
-	}
-	protected function getARandomHexValue(int $nibblesLong, int $multiplex=0):string{
-		$minValue="1".str_pad("",$nibblesLong-1,"0");
-		$maxValue=str_pad("",$nibblesLong,"F");
-		return sprintf("%x",mt_rand(hexdec($minValue),hexdec($maxValue)) | $multiplex);
-	}
-	public function setNode(?string $value=null):static {
-		if(!$value) {
-			$this->node = $this->getARandomHexValue(12);
-		}elseif($value&&$this->validateNodeValue($value)) {
-			$this->node = $value;
-		}else{
-			throw new InvalidNodeValueException();
-		}
-		return $this;
-	}
-	protected function validateNodeValue(string $value):bool{
-		return preg_match(self::NODE_FORMAT_VALID,$value)==1;
-	}
-	protected function getNode():string {
-		$this->components['nodeValue']=$this->node;
-		return $this->node ?? "";
-	}
-	private function resetComponents():void{
-		$this->components=[];
-	}
-	public function getVersion():int{
-		return $this->version->value;
-	}
-	protected function compile():string {
-		$this->resetComponents();
-		$this->getTimeLow();
-		$this->getTimeMid();
-		$this->getTimeHighAndVersion();
-		$this->getClockHighAndReserved();
-		$this->getClockLow();
-		$this->getNode();
-		return sprintf(self::UUID_FORMAT_OUTPUT,...array_values($this->components));
-	}
-
-    public static function validate(string $uuid):bool
+    protected function setTimestamp():void
     {
-        return preg_match('/(?i)^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/',$uuid)==1;
+        $this->timestamp=self::GREGOR+(microtime(true)*(10**7));
+    }
+    protected function randomBits(int $numberOfBits):int
+    {
+        return rand(0,(2**$numberOfBits)-1);
+    }
+    public function __toString(): string
+    {
+        $this->setTimestamp();
+        $this->previous=sprintf(
+            "%08X-%04X-%04X-%04X-%012X",
+            $this->getTimeLow(),
+            $this->getTimeMid(),
+            $this->getTimeHigh()|$this->getVersion(),
+            $this->getClockSequence()|$this->getReserved(),
+            $this->getNode()
+        );
+        return $this->previous;
+    }
+
+    /**
+     * The first group of the UUID
+     * XXXXXXXX-0000-0000-0000-000000000000
+     * @return int 32bit number
+     */
+    abstract protected function getTimeLow():int;
+
+    /**
+     * The second group of the UUID<br>
+     * 00000000-XXXX-0000-0000-000000000000
+     * @return int 16bit number
+     */
+    abstract protected function getTimeMid(): int;
+
+    /**
+     * Forms part of the third group of the UUID<br>
+     * 00000000-0000-XXX0-0000-000000000000
+     * @return int 12bit number shifted left 4 bits
+     */
+    abstract protected function getTimeHigh(): int;
+    /**
+     * Forms part of the third group of the UUID<br>
+     * 00000000-0000-000X-0000-000000000000
+     * @return int 4bit number
+     */
+    abstract protected function getVersion(): int;
+
+    /**
+     * Forms part of the fourth group of the UUID<br>
+     * 00000000-0000-0000-XXX0-000000000000
+     * @return int 13bit number
+     */
+    abstract protected function getClockSequence():int;
+    public function setReserved(int $value): static
+    {
+        if($value<1||$value>7){
+            $this->reserved=1;
+        }else{
+            $this->reserved=$value;
+        }
+        return $this;
+    }
+
+    /**
+     * Forms part of the fourth group of the UUID<br>
+     * 00000000-0000-0000-000X-000000000000
+     * @return int 3bit number
+     */
+    abstract protected function getReserved():int;
+    public function setNode($value): static
+    {
+        if(is_string($value)){
+            $this->node=crc32($value)<<16;
+            return $this;
+        }
+        if(is_int($value)){
+            if($value>(2**48)-1){
+                $this->node=$value&0xFFFFFFFFFFFF;
+                return $this;
+            }
+            $this->node=$value;
+            return $this;
+        }
+        if(empty($value)){
+            $this->node=rand(0,2**48)-1;
+        }
+        return $this;
+    }
+    /**
+     * Forms the fifth group of the UUID<br>
+     * 00000000-0000-0000-0000-XXXXXXXXXXXX
+     * @return int 48bit number
+     */
+    abstract protected function getNode();
+
+    public static function Timebased():TimebasedUUID
+    {
+        return new TimebasedUUID();
+    }
+
+    public static function MD5(string $namespace):MD5Namespaced
+    {
+        return new MD5Namespaced($namespace);
+    }
+
+    public static function SHA1(string $namespace):SHA1Namespaced
+    {
+        return new SHA1Namespaced($namespace);
+    }
+
+    public static function Random():Random
+    {
+        return new Random();
     }
 }
